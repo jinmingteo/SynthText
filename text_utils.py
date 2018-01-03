@@ -14,6 +14,8 @@ from pygame import freetype
 from PIL import Image
 import math
 from common import *
+import codecs
+from logger import logger
 
 
 def sample_weighted(p_dict):
@@ -364,6 +366,7 @@ class RenderFont(object):
             # sample text:
             text_type = sample_weighted(self.p_text)
             text = self.text_source.sample(nline,nchar,text_type)
+
             if len(text)==0 or np.any([len(line)==0 for line in text]):
                 continue
             #print colorize(Color.GREEN, text)
@@ -443,7 +446,7 @@ class FontState(object):
             sizes = font.get_metrics(chars,size)
             good_idx = [i for i in xrange(len(sizes)) if sizes[i] is not None]
             sizes,w = [sizes[i] for i in good_idx], w[good_idx]
-            sizes = np.array(sizes).astype('float')[:,[3,4]]        
+            sizes = np.array(sizes).astype('float')[:,[3,4]]
             r = np.abs(sizes[:,1]/sizes[:,0]) # width/height
             good = np.isfinite(r)
             r = r[good]
@@ -513,8 +516,11 @@ class TextSource(object):
                       'LINE':self.sample_line,
                       'PARA':self.sample_para}
 
-        with open(fn,'r') as f:
-            self.txt = [l.strip() for l in f.readlines()]
+        with codecs.open(fn, 'r', "utf-8") as f:
+            self.txt = []
+            for line in f:
+                line_ = self.space_out_unicode(line.strip())
+                self.txt.append(line_)
 
         # distribution over line/words for LINE/PARA:
         self.p_line_nline = np.array([0.85, 0.10, 0.05])
@@ -525,13 +531,77 @@ class TextSource(object):
         # probability to center-align a paragraph:
         self.center_para = 0.5
 
+    __ranges = [
+        {"from": ord(u"\u3300"), "to": ord(u"\u33ff")},  # compatibility ideographs
+        {"from": ord(u"\ufe30"), "to": ord(u"\ufe4f")},  # compatibility ideographs
+        {"from": ord(u"\uf900"), "to": ord(u"\ufaff")},  # compatibility ideographs
+        {"from": ord(u"\U0002F800"), "to": ord(u"\U0002fa1f")},  # compatibility ideographs
+        {"from": ord(u"\u30a0"), "to": ord(u"\u30ff")},  # Japanese Kana
+        {"from": ord(u"\u2e80"), "to": ord(u"\u2eff")},  # cjk radicals supplement
+        {"from": ord(u"\u4e00"), "to": ord(u"\u9fff")},
+        {"from": ord(u"\u3400"), "to": ord(u"\u4dbf")},
+        {"from": ord(u"\U00020000"), "to": ord(u"\U0002a6df")},
+        {"from": ord(u"\U0002a700"), "to": ord(u"\U0002b73f")},
+        {"from": ord(u"\U0002b740"), "to": ord(u"\U0002b81f")},
+        {"from": ord(u"\U0002b820"), "to": ord(u"\U0002ceaf")}  # included as of Unicode 8.0
+    ]
+
+    def is_cjk(self, char):
+        return any([range["from"] <= ord(char) <= range["to"] for range in self.__ranges])
+
+    def cjk_substrings(self, string):
+        # For japanese characters, select 5~10 chars
+        # TODO add more useful rule to split japanese characters
+        substrings = []
+        start = 0
+        count = 0
+        count_max = np.random.randint(5, 10)
+        for i in range(len(string)):
+            # is ascii character
+            if ord(string[i]) in range(65, 91):
+                substrings.append(string[start:i])
+                start = i
+                count = 0
+            else:
+                if count < count_max:
+                    # if self.is_cjk(string[i]) & count < count_max:
+                    count = count + 1
+                else:
+                    # if count == count_max:
+                    count_max = np.random.randint(5, 10)
+                    count = 0
+                    substrings.append(string[start:i])
+                    start = i
+
+        out_substrings = []
+        for sub in substrings:
+            if len(sub) > 5:
+                out_substrings.append(sub)
+
+        return out_substrings
+
+    def space_out_unicode(self, string):
+        # TODO to make .split() work for utf-8, add space between thoose words
+        output_str = ""
+        for sub in self.cjk_substrings(string):
+            output_str = output_str + sub + " "
+
+        return output_str
+
 
     def check_symb_frac(self, txt, f=0.35):
         """
         T/F return : T iff fraction of symbol/special-charcters in
                      txt is less than or equal to f (default=0.25).
         """
-        return np.sum([not ch.isalnum() for ch in txt])/(len(txt)+0.0) <= f
+        chcnt = 0
+        line = txt  # .decode('utf-8')
+        for ch in line:
+            if ch.isalnum() or self.is_cjk(ch):
+                chcnt += 1
+
+        return float(chcnt) / (len(txt) + 0.0) > f
+        # return np.sum([not ch.isalnum() for ch in txt])/(len(txt)+0.0) <= f
 
     def is_good(self, txt, f=0.35):
         """
@@ -604,9 +674,9 @@ class TextSource(object):
 
     def sample(self, nline_max,nchar_max,kind='WORD'):
         return self.fdict[kind](nline_max,nchar_max)
-        
+
     def sample_word(self,nline_max,nchar_max,niter=100):
-        rand_line = self.txt[np.random.choice(len(self.txt))]                
+        rand_line = self.txt[np.random.choice(len(self.txt))]
         words = rand_line.split()
         rand_word = random.choice(words)
 

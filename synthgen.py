@@ -10,7 +10,7 @@ import copy
 import cv2
 import h5py
 from PIL import Image
-import numpy as np 
+import numpy as np
 #import mayavi.mlab as mym
 import matplotlib.pyplot as plt 
 import os.path as osp
