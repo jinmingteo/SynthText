@@ -1,14 +1,21 @@
 # SynthText
 Code for generating synthetic text images as described in ["Synthetic Data for Text Localisation in Natural Images", Ankush Gupta, Andrea Vedaldi, Andrew Zisserman, CVPR 2016](http://www.robots.ox.ac.uk/~vgg/data/scenetext/).
 
+Add support for japanese characters
 
 **Synthetic Scene-Text Image Samples**
 ![Synthetic Scene-Text Samples](samples.png "Synthetic Samples")
 
+![Japanese example 1](results/samples1.png "Synthetic Japanese Text Samples 1")
+![Japanese example 2](results/samples2.png "Synthetic Japanese Text Samples 2")
+![Japanese example 3](results/samples3.png "Synthetic Japanese Text Samples 3")
+![Japanese example 4](results/samples4.png "Synthetic Japanese Text Samples 4")
+
+
 The library is written in Python. The main dependencies are:
 
 ```
-pygame, opencv (cv2), PIL (Image), numpy, matplotlib, h5py, scipy
+pygame, opencv (version 3.3), PIL (Image), numpy, matplotlib, h5py, scipy
 ```
 
 ### Generating samples
