@@ -197,9 +197,9 @@ if __name__=='__main__':
     scipy.misc.imsave('alpha.png',im_alpha[:,:,::-1].astype('uint8'))
     scipy.misc.imsave('poisson.png',im_res[:,:,::-1].astype('uint8'))
 
-    im_actual_L = cv2.cvtColor(im_src.astype('uint8'),cv2.cv.CV_BGR2Lab)[:,:,0]
-    im_alpha_L = cv2.cvtColor(im_alpha.astype('uint8'),cv2.cv.CV_BGR2Lab)[:,:,0]
-    im_poisson_L = cv2.cvtColor(im_res.astype('uint8'),cv2.cv.CV_BGR2Lab)[:,:,0]
+    im_actual_L = cv2.cvtColor(im_src.astype('uint8'),cv2.COLOR_BGR2Lab)[:,:,0]
+    im_alpha_L = cv2.cvtColor(im_alpha.astype('uint8'),cv2.COLOR_BGR2Lab)[:,:,0]
+    im_poisson_L = cv2.cvtColor(im_res.astype('uint8'),cv2.COLOR_BGR2Lab)[:,:,0]
 
     # plt.imshow(im_alpha_L)
     # plt.show()
