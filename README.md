@@ -1,17 +1,17 @@
-# SynthText
-Code for generating synthetic text images as described in ["Synthetic Data for Text Localisation in Natural Images", Ankush Gupta, Andrea Vedaldi, Andrew Zisserman, CVPR 2016](http://www.robots.ox.ac.uk/~vgg/data/scenetext/).
+# SynthText for Japanese
+Code for generating synthetic text images as described in ["Synthetic Data for Text Localisation in Natural Images", Ankush Gupta, Andrea Vedaldi, Andrew Zisserman, CVPR 2016](http://www.robots.ox.ac.uk/~vgg/data/scenetext/) with support for japanese characters
 
-Add support for japanese characters
-
-**Synthetic Scene-Text Image Samples**
-![Synthetic Scene-Text Samples](samples.png "Synthetic Samples")
+## Output samples
 
 **Synthetic Japanese Text Samples 1**
 ![Japanese example 1](results/sample1.png "Synthetic Japanese Text Samples 1")
+
 **Synthetic Japanese Text Samples 2**
 ![Japanese example 2](results/sample2.png "Synthetic Japanese Text Samples 2")
+
 **Synthetic Japanese Text Samples 3**
 ![Japanese example 3](results/sample3.png "Synthetic Japanese Text Samples 3")
+
 **Synthetic Japanese Text Samples 4**
 ![Japanese example 4](results/sample4.png "Synthetic Japanese Text Samples 4")
 
@@ -21,6 +21,58 @@ The library is written in Python. The main dependencies are:
 ```
 pygame, opencv (version 3.3), PIL (Image), numpy, matplotlib, h5py, scipy
 ```
+
+## The main differences
+
+Use opencv 3.3 instead of opencv 2.4
+
+In case of Ankush's SynthText, he used split() method to split input text source into words by using space.
+Laterly those word will be used to render text to the images.
+But for japanese (chinese, korean, etc) they do not be seperated by space.
+Currently, i randomly add space to input text source. This allow SynthText to work normally.
+(Actually, a japanese dictionary should be used to split text source into meaningful word.)
+I will implement this later.
+
+## How to use this source
+
+### Preparation
+
+Put your text data and font as follow
+
+```
+data
+├── dset.h5
+├── fonts
+│   ├── fontlist.txt                        : your font list
+│   ├── ubuntu
+│   ├── ubuntucondensed
+│   ├── ubuntujapanese                      : your japanese font
+│   └── ubuntumono
+├── models
+│   ├── char_freq.cp
+│   ├── colors_new.cp
+│   └── font_px2pt.cp
+└── newsgroup
+    └── newsgroup.txt                       : your text source
+```
+
+### Generate font model and char model
+```
+python invert_font_size.py
+python update_freq.py
+
+mv char_freq.cp data/models/
+mv font_px2pt.cp data/models/
+```
+
+### Then go to next
+
+# SynthText
+Code for generating synthetic text images as described in ["Synthetic Data for Text Localisation in Natural Images", Ankush Gupta, Andrea Vedaldi, Andrew Zisserman, CVPR 2016](http://www.robots.ox.ac.uk/~vgg/data/scenetext/).
+
+
+**Synthetic Scene-Text Image Samples**
+![Synthetic Scene-Text Samples](samples.png "Synthetic Samples")
 
 ### Generating samples
 
