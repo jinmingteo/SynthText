@@ -5,18 +5,22 @@ Code for generating synthetic text images as described in ["Synthetic Data for T
 
 
 **Synthetic Japanese Text Samples 1**
+
 ![Japanese example 1](results/sample1.png "Synthetic Japanese Text Samples 1")
 
 
 **Synthetic Japanese Text Samples 2**
+
 ![Japanese example 2](results/sample2.png "Synthetic Japanese Text Samples 2")
 
 
 **Synthetic Japanese Text Samples 3**
+
 ![Japanese example 3](results/sample3.png "Synthetic Japanese Text Samples 3")
 
 
 **Synthetic Japanese Text Samples 4**
+
 ![Japanese example 4](results/sample4.png "Synthetic Japanese Text Samples 4")
 
 
@@ -36,6 +40,8 @@ But for japanese (chinese, korean, etc) they do not be seperated by space.
 Currently, i randomly add space to input text source. This allow SynthText to work normally.
 (Actually, a japanese dictionary should be used to split text source into meaningful word.)
 I will implement this later.
+
+This should word Chinese, Korean and other utf-8 characters.
 
 ## How to use this source
 
