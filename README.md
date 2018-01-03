@@ -6,9 +6,13 @@ Add support for japanese characters
 **Synthetic Scene-Text Image Samples**
 ![Synthetic Scene-Text Samples](samples.png "Synthetic Samples")
 
+**Synthetic Japanese Text Samples 1**
 ![Japanese example 1](results/sample1.png "Synthetic Japanese Text Samples 1")
+**Synthetic Japanese Text Samples 2**
 ![Japanese example 2](results/sample2.png "Synthetic Japanese Text Samples 2")
+**Synthetic Japanese Text Samples 3**
 ![Japanese example 3](results/sample3.png "Synthetic Japanese Text Samples 3")
+**Synthetic Japanese Text Samples 4**
 ![Japanese example 4](results/sample4.png "Synthetic Japanese Text Samples 4")
 
 
