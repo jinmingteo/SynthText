@@ -38,8 +38,7 @@ In case of Ankush's SynthText, he used split() method to split input text source
 Laterly those word will be used to render text to the images.
 But for japanese (chinese, korean, etc) they do not be seperated by space.
 Currently, i randomly add space to input text source. This allow SynthText to work normally.
-(Actually, a japanese dictionary should be used to split text source into meaningful word.)
-I will implement this later.
+(Actually, we should use nltk to parse language and select word, line, param)
 
 This should word Chinese, Korean and other utf-8 characters.
 
@@ -127,6 +126,8 @@ Note: I do not own the copyright to these images.
 
 ### Generating Samples with Text in non-Latin (English) Scripts
 @JarveeLee has modified the pipeline for generating samples with Chinese text [here](https://github.com/JarveeLee/SynthText_Chinese_version).
+@gachiemchiep has modified the pipeline for generating samples with Japanese text [here](https://github.com/gachiemchiep/SynthText).
+
 
 ### Further Information
 Please refer to the paper for more information, or contact me (email address in the paper).
