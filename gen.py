@@ -36,6 +36,8 @@ DB_FNAME = osp.join(DATA_PATH, 'dset.h5')
 DATA_URL = 'http://www.robots.ox.ac.uk/~ankush/data.tar.gz'
 OUT_FILE = 'results/SynthText.h5'
 OUT_DIR = 'results'
+# Select "ENG" or "JPN"
+LANG = "JPN"
 
 def get_data():
     """
@@ -111,7 +113,7 @@ def main(viz=False):
         NUM_IMG = N
     start_idx, end_idx = 0, min(NUM_IMG, N)
 
-    RV3 = RendererV3(DATA_PATH, max_time=SECS_PER_IMG)
+    RV3 = RendererV3(DATA_PATH, max_time=SECS_PER_IMG, lang=LANG)
     for i in xrange(start_idx, end_idx):
         imname = imnames[i]
         try:

@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt 
@@ -17,6 +20,13 @@ from common import *
 import codecs
 from logger import logger
 
+import nltk, re, pprint
+from nltk import word_tokenize, sent_tokenize
+from nltk.corpus.reader import *
+from nltk.corpus.reader.util import *
+from nltk.text import Text
+from nltk.corpus.reader.chasen import *
+import subprocess
 
 def sample_weighted(p_dict):
     ps = p_dict.keys()
@@ -81,7 +91,7 @@ class RenderFont(object):
         Also, outputs ground-truth bounding boxes and text string
     """
 
-    def __init__(self, data_dir='data'):
+    def __init__(self, data_dir='data', lang="ENG"):
         # distribution over the type of text:
         # whether to get a single word, paragraph or a line:
         self.p_text = {0.0 : 'WORD',
@@ -104,7 +114,8 @@ class RenderFont(object):
 
         # text-source : gets english text:
         self.text_source = TextSource(min_nchar=self.min_nchar,
-                                      fn=osp.join(data_dir,'newsgroup/newsgroup.txt'))
+                                      fn=osp.join(data_dir,'newsgroup/newsgroup.txt'),
+                                      lang=lang)
 
         # get font-state object:
         self.font_state = FontState(data_dir)
@@ -507,29 +518,6 @@ class TextSource(object):
     """
     Provides text for words, paragraphs, sentences.
     """
-    def __init__(self, min_nchar, fn):
-        """
-        TXT_FN : path to file containing text data.
-        """
-        self.min_nchar = min_nchar
-        self.fdict = {'WORD':self.sample_word,
-                      'LINE':self.sample_line,
-                      'PARA':self.sample_para}
-
-        with codecs.open(fn, 'r', "utf-8") as f:
-            self.txt = []
-            for line in f:
-                line_ = self.space_out_unicode(line.strip())
-                self.txt.append(line_)
-
-        # distribution over line/words for LINE/PARA:
-        self.p_line_nline = np.array([0.85, 0.10, 0.05])
-        self.p_line_nword = [4,3,12]  # normal: (mu, std)
-        self.p_para_nline = [1.0,1.0]#[1.7,3.0] # beta: (a, b), max_nline
-        self.p_para_nword = [1.7,3.0,10] # beta: (a,b), max_nword
-
-        # probability to center-align a paragraph:
-        self.center_para = 0.5
 
     __ranges = [
         {"from": ord(u"\u3300"), "to": ord(u"\u33ff")},  # compatibility ideographs
@@ -546,61 +534,81 @@ class TextSource(object):
         {"from": ord(u"\U0002b820"), "to": ord(u"\U0002ceaf")}  # included as of Unicode 8.0
     ]
 
+    def __init__(self, min_nchar, fn, lang="ENG"):
+        """
+        TXT_FN : path to file containing text data.
+        """
+        self.min_nchar = min_nchar
+        self.fdict = {'WORD':self.sample_word,
+                      'LINE':self.sample_line,
+                      'PARA':self.sample_para}
+        self.lang = lang
+        # parse English text
+        if self.lang == "ENG":
+            corpus = PlaintextCorpusReader("./",
+                                         fn)
+
+            self.words = corpus.words()
+            self.sents = corpus.sents()
+            self.paras = corpus.paras()
+
+        # parse Japanese text
+        elif self.lang == "JPN":
+
+            # convert fs into chasen file
+            _, ext = os.path.splitext(os.path.basename(fn))
+            fn_chasen = fn.replace(ext, ".chasen")
+            print "Convert {} into {}".format(fn, fn_chasen)
+
+            cmd = "mecab -Ochasen {} > {}".format(fn, fn_chasen)
+            print "The following cmd below was executed to convert into chasen (for Japanese)"
+            print "\t{}".format(cmd)
+            p = subprocess.call(cmd, shell=True)
+            data = ChasenCorpusReader('./', fn_chasen, encoding='utf-8')
+
+            self.words = data.words()
+
+            jp_sent_tokenizer = nltk.RegexpTokenizer(u'[^　「」！？。]*[！？。]')
+            jp_chartype_tokenizer = nltk.RegexpTokenizer(u'([ぁ-んー]+|[ァ-ンー]+|[\u4e00-\u9FFF]+|[^ぁ-んァ-ンー\u4e00-\u9FFF]+)')
+
+            corpus = PlaintextCorpusReader("./",
+                                         fn,
+                                         encoding='utf-8',
+                                         para_block_reader=read_line_block,
+                                         sent_tokenizer=jp_sent_tokenizer,
+                                         word_tokenizer=jp_chartype_tokenizer)
+            self.words = corpus.words()
+            self.sents = data.sents()
+            self.paras = data.paras()
+
+        # distribution over line/words for LINE/PARA:
+        self.p_line_nline = np.array([0.85, 0.10, 0.05])
+        self.p_line_nword = [4,3,12]  # normal: (mu, std)
+        self.p_para_nline = [1.0,1.0]#[1.7,3.0] # beta: (a, b), max_nline
+        self.p_para_nword = [1.7,3.0,10] # beta: (a,b), max_nword
+
+        # probability to center-align a paragraph:
+        self.center_para = 0.5
+
     def is_cjk(self, char):
         return any([range["from"] <= ord(char) <= range["to"] for range in self.__ranges])
-
-    def cjk_substrings(self, string):
-        # For japanese characters, select 5~10 chars
-        # TODO add more useful rule to split japanese characters
-        substrings = []
-        start = 0
-        count = 0
-        count_max = np.random.randint(5, 10)
-        for i in range(len(string)):
-            # is ascii character
-            if ord(string[i]) in range(65, 91):
-                substrings.append(string[start:i])
-                start = i
-                count = 0
-            else:
-                if count < count_max:
-                    # if self.is_cjk(string[i]) & count < count_max:
-                    count = count + 1
-                else:
-                    # if count == count_max:
-                    count_max = np.random.randint(5, 10)
-                    count = 0
-                    substrings.append(string[start:i])
-                    start = i
-
-        out_substrings = []
-        for sub in substrings:
-            if len(sub) > 5:
-                out_substrings.append(sub)
-
-        return out_substrings
-
-    def space_out_unicode(self, string):
-        # TODO to make .split() work for utf-8, add space between thoose words
-        output_str = ""
-        for sub in self.cjk_substrings(string):
-            output_str = output_str + sub + " "
-
-        return output_str
-
 
     def check_symb_frac(self, txt, f=0.35):
         """
         T/F return : T iff fraction of symbol/special-charcters in
                      txt is less than or equal to f (default=0.25).
         """
-        chcnt = 0
-        line = txt  # .decode('utf-8')
-        for ch in line:
-            if ch.isalnum() or self.is_cjk(ch):
-                chcnt += 1
+        if self.lang == "ENG":
+            return np.sum([not ch.isalnum() for ch in txt]) / (len(txt) + 0.0) <= f
 
-        return float(chcnt) / (len(txt) + 0.0) > f
+        elif self.lang == "JPN":
+            chcnt = 0
+            line = txt  # .decode('utf-8')
+            for ch in line:
+                if ch.isalnum() or self.is_cjk(ch):
+                    chcnt += 1
+
+            return float(chcnt) / (len(txt) + 0.0) > f
         # return np.sum([not ch.isalnum() for ch in txt])/(len(txt)+0.0) <= f
 
     def is_good(self, txt, f=0.35):
@@ -638,13 +646,14 @@ class TextSource(object):
         return lines
 
     def get_lines(self, nline, nword, nchar_max, f=0.35, niter=100):
+
         def h_lines(niter=100):
             lines = ['']
             iter = 0
             while not np.all(self.is_good(lines,f)) and iter < niter:
                 iter += 1
-                line_start = np.random.choice(len(self.txt)-nline)
-                lines = [self.txt[line_start+i] for i in range(nline)]
+                line_start = np.random.choice(len(self.sents)-nline)
+                lines = [self.sents[line_start+i] for i in range(nline)]
             return lines
 
         lines = ['']
@@ -655,7 +664,7 @@ class TextSource(object):
             # get words per line:
             nline = len(lines)
             for i in range(nline):
-                words = lines[i].split()
+                words = lines[i]
                 dw = len(words)-nword[i]
                 if dw > 0:
                     first_word_index = random.choice(range(dw+1))
@@ -676,13 +685,13 @@ class TextSource(object):
         return self.fdict[kind](nline_max,nchar_max)
 
     def sample_word(self,nline_max,nchar_max,niter=100):
-        rand_line = self.txt[np.random.choice(len(self.txt))]
+        rand_line = self.sents[np.random.choice(len(self.sents))]
         words = rand_line.split()
         rand_word = random.choice(words)
 
         iter = 0
         while iter < niter and (not self.is_good([rand_word])[0] or len(rand_word)>nchar_max):
-            rand_line = self.txt[np.random.choice(len(self.txt))]                
+            rand_line = self.txt[np.random.choice(len(self.sents))]
             words = rand_line.split()
             rand_word = random.choice(words)
             iter += 1
