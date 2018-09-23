@@ -567,19 +567,18 @@ class TextSource(object):
             data = ChasenCorpusReader('./', fn_chasen, encoding='utf-8')
 
             self.words = data.words()
-
-            jp_sent_tokenizer = nltk.RegexpTokenizer(u'[^　「」！？。]*[！？。]')
-            jp_chartype_tokenizer = nltk.RegexpTokenizer(u'([ぁ-んー]+|[ァ-ンー]+|[\u4e00-\u9FFF]+|[^ぁ-んァ-ンー\u4e00-\u9FFF]+)')
-
-            corpus = PlaintextCorpusReader("./",
-                                         fn,
-                                         encoding='utf-8',
-                                         para_block_reader=read_line_block,
-                                         sent_tokenizer=jp_sent_tokenizer,
-                                         word_tokenizer=jp_chartype_tokenizer)
-            self.words = corpus.words()
             self.sents = data.sents()
             self.paras = data.paras()
+
+            # jp_sent_tokenizer = nltk.RegexpTokenizer(u'[^　「」！？。]*[！？。]')
+            # jp_chartype_tokenizer = nltk.RegexpTokenizer(u'([ぁ-んー]+|[ァ-ンー]+|[\u4e00-\u9FFF]+|[^ぁ-んァ-ンー\u4e00-\u9FFF]+)')
+            #
+            # corpus = PlaintextCorpusReader("./",
+            #                              fn,
+            #                              encoding='utf-8',
+            #                              para_block_reader=read_line_block,
+            #                              sent_tokenizer=jp_sent_tokenizer,
+            #                              word_tokenizer=jp_chartype_tokenizer)
 
         # distribution over line/words for LINE/PARA:
         self.p_line_nline = np.array([0.85, 0.10, 0.05])

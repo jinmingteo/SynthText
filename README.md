@@ -1,5 +1,9 @@
-# SynthText for Japanese
+# SynthText for (English + Japanese)
 Code for generating synthetic text images as described in ["Synthetic Data for Text Localisation in Natural Images", Ankush Gupta, Andrea Vedaldi, Andrew Zisserman, CVPR 2016](http://www.robots.ox.ac.uk/~vgg/data/scenetext/) with support for japanese characters
+
+## TODO
+
+Add support for chinese
 
 ## Output samples
 
@@ -32,15 +36,8 @@ pygame, opencv (version 3.3), PIL (Image), numpy, matplotlib, h5py, scipy
 
 ## The main differences
 
-Use opencv 3.3 instead of opencv 2.4
-
-In case of Ankush's SynthText, he used split() method to split input text source into words by using space.
-Laterly those word will be used to render text to the images.
-But for japanese (chinese, korean, etc) they do not be seperated by space.
-Currently, i randomly add space to input text source. This allow SynthText to work normally.
-(Actually, we should use nltk to parse language and select word, line, param)
-
-This should word Chinese, Korean and other utf-8 characters.
+1. Use opencv 3.3 instead of opencv 2.4
+2. Use nltk to parse language (eng, jpn)
 
 ## How to use this source
 
@@ -63,6 +60,13 @@ data
 │   └── font_px2pt.cp
 └── newsgroup
     └── newsgroup.txt                       : your text source
+```
+
+### Install dependencies
+
+```
+# For japanese
+sudo apt-get install libmecab2 libmecab-dev mecab mecab-ipadic mecab-ipadic-utf8 mecab-utils
 ```
 
 ### Generate font model and char model
