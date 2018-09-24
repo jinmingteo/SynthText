@@ -36,8 +36,6 @@ DB_FNAME = osp.join(DATA_PATH, 'dset.h5')
 DATA_URL = 'http://www.robots.ox.ac.uk/~ankush/data.tar.gz'
 OUT_FILE = 'results/SynthText.h5'
 OUT_DIR = 'results'
-# Select "ENG" or "JPN"
-LANG = "JPN"
 
 def get_data():
     """
@@ -113,7 +111,7 @@ def main(viz=False):
         NUM_IMG = N
     start_idx, end_idx = 0, min(NUM_IMG, N)
 
-    RV3 = RendererV3(DATA_PATH, max_time=SECS_PER_IMG, lang=LANG)
+    RV3 = RendererV3(DATA_PATH, max_time=SECS_PER_IMG, lang=args.lang)
     for i in xrange(start_idx, end_idx):
         imname = imnames[i]
         try:
@@ -160,5 +158,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Genereate Synthetic Scene-Text Images')
     parser.add_argument('--viz', action='store_true', dest='viz', default=False,
                         help='flag for turning on visualizations')
+    parser.add_argument('--lang', default='ENG',
+                        help='Select language : ENG/JPN')
     args = parser.parse_args()
     main(args.viz)

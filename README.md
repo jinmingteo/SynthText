@@ -90,7 +90,7 @@ Code for generating synthetic text images as described in ["Synthetic Data for T
 ### Generating samples
 
 ```
-python gen.py --viz
+python gen.py --viz --lang ENG/JPN
 ```
 
 This will download a data file (~56M) to the `data` directory. This data file includes:
