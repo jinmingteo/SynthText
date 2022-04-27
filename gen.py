@@ -74,10 +74,10 @@ def add_res_to_db(imgname, res, db):
         db['data'].create_dataset(dname, data=res[i]['img'])
         db['data'][dname].attrs['charBB'] = res[i]['charBB']
         db['data'][dname].attrs['wordBB'] = res[i]['wordBB']
-        # db['data'][dname].attrs['txt'] = res[i]['txt']
-        L = res[i]['txt']
-        L = [n.encode("ascii", "ignore") for n in L]
-        db['data'][dname].attrs['txt'] = L
+        db['data'][dname].attrs['txt'] = res[i]['txt']
+        text_utf8 = [char.encode('utf8') for char in res[i]['txt']]
+        db['data'][dname].attrs['txt_utf8'] = text_utf8
+
 def save_res_to_imgs(imgname, res):
     """
     Add the synthetically generated text image instance
@@ -128,8 +128,8 @@ def main(viz=False):
 
             # re-size uniformly:
             sz = depth.shape[:2][::-1]
-            img = np.array(img.resize(sz, Image.ANTIALIAS))
-            seg = np.array(Image.fromarray(seg).resize(sz, Image.NEAREST))
+            img = np.array(img.resize(sz, Image.Resampling.LANCZOS))
+            seg = np.array(Image.fromarray(seg).resize(sz, Image.Resampling.NEAREST))
 
             print('%d of %d' % (i, end_idx - 1))
             res = RV3.render_text(img, depth, seg, area, label,
@@ -153,10 +153,10 @@ def main(viz=False):
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(description='Genereate Synthetic Scene-Text Images')
+    parser = argparse.ArgumentParser(description='Generate Synthetic Scene-Text Images')
     parser.add_argument('--viz', action='store_true', dest='viz', default=False,
                         help='flag for turning on visualizations')
     parser.add_argument('--lang', default='ENG',
-                        help='Select language : ENG/JPN')
+                        help='Select language : ENG or JPN')
     args = parser.parse_args()
     main(args.viz)

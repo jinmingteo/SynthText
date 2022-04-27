@@ -233,6 +233,7 @@ def ssc(v):
     """
     Returns the skew-symmetric cross-product matrix corresponding to v.
     """
+    v += np.finfo("float").eps
     v /= np.linalg.norm(v)
     return np.array([[    0, -v[2],  v[1]],
                      [ v[2],     0, -v[0]],
