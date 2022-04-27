@@ -233,6 +233,7 @@ def ssc(v):
     """
     Returns the skew-symmetric cross-product matrix corresponding to v.
     """
+    v += np.finfo("float").eps
     v /= np.linalg.norm(v)
     return np.array([[    0, -v[2],  v[1]],
                      [ v[2],     0, -v[0]],
@@ -271,7 +272,7 @@ def unrotate2d(pts):
         elif R[1,1]<0:
             R[:,1] *= -1
         else:
-            print "Rotation matrix not understood"
+            print ("Rotation matrix not understood")
             return
     if R[0,0]<0 and R[1,1]<0:
         R *= -1
