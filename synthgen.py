@@ -189,16 +189,24 @@ def rescale_frontoparallel(p_fp,box_fp,p_im):
 
     Returns the scale 's' to scale the fronto-parallel points by.
     """
+    if len(p_im.shape) <= 1:
+        return 1
+    
     l1 = np.linalg.norm(box_fp[1,:]-box_fp[0,:])
     l2 = np.linalg.norm(box_fp[1,:]-box_fp[2,:])
 
     n0 = np.argmin(np.linalg.norm(p_fp-box_fp[0,:][None,:],axis=1))
     n1 = np.argmin(np.linalg.norm(p_fp-box_fp[1,:][None,:],axis=1))
     n2 = np.argmin(np.linalg.norm(p_fp-box_fp[2,:][None,:],axis=1))
-
+    
     lt1 = np.linalg.norm(p_im[n1,:]-p_im[n0,:])
     lt2 = np.linalg.norm(p_im[n1,:]-p_im[n2,:])
-
+    
+    lt1 += np.finfo("float").eps
+    lt2 += np.finfo("float").eps
+    l1 += np.finfo("float").eps
+    l2 += np.finfo("float").eps
+    
     s =  max(lt1/l1,lt2/l2)
     if not np.isfinite(s):
         s = 1.0
