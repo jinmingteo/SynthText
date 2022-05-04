@@ -5,7 +5,7 @@ opencv-python
 nltk
 numpy
 Pillow
-pygame
+pygame==1.9.4
 pyparsing
 pytz
 scipy
