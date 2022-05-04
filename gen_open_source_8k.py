@@ -30,12 +30,14 @@ INSTANCE_PER_IMAGE = 1  # no. of times to use the same image
 SECS_PER_IMG = 5  # max time per image in seconds
 
 # path to the data-file, containing image, depth and segmentation:
-DATA_PATH = 'data'
-DB_FNAME = osp.join(DATA_PATH, 'dset.h5')
+LANG_PATH = 'data'
+DATA_PATH = 'bkg_images'
+IMG_PATH = 'bkg_images/bg_img'
+
 # url of the data (google-drive public file):
 DATA_URL = 'http://www.robots.ox.ac.uk/~ankush/data.tar.gz'
-OUT_FILE = 'results/SynthText.h5'
-OUT_DIR = 'results'
+OUT_FILE = 'results_8k/SynthText_open_source_8k.h5'
+OUT_DIR = 'results_8k'
 
 
 def get_data():
@@ -78,7 +80,7 @@ def add_res_to_db(imgname, res, db):
         db['data'][dname].attrs['txt'] = res[i]['txt']
         text_utf8 = [char.encode('utf8') for char in res[i]['txt']]
         db['data'][dname].attrs['txt_utf8'] = text_utf8
-
+        
 def save_res_to_imgs(imgname, res):
     """
     Add the synthetically generated text image instance
@@ -92,40 +94,37 @@ def save_res_to_imgs(imgname, res):
         cv2.imwrite(filename, img)
 
 def main(viz=False):
-    # open databases:
-    print('getting data..')
-    db = get_data()
-    print('\t-> done')
-
+    depth_db = h5py.File(os.path.join(DATA_PATH, 'depth.h5'), 'r')
+    seg_db = h5py.File(os.path.join(DATA_PATH, 'seg.h5'), 'r')
+    
     # open the output h5 file:
     out_db = h5py.File(OUT_FILE, 'w')
     out_db.create_group('/data')
     print('Storing the output in: ' + OUT_FILE)
 
     # get the names of the image files in the dataset:
-    imnames = sorted(db['image'].keys())
+    imnames = sorted(depth_db.keys())
     N = len(imnames)
     global NUM_IMG
     if NUM_IMG < 0:
         NUM_IMG = N
     start_idx, end_idx = 0, min(NUM_IMG, N)
 
-    RV3 = RendererV3(DATA_PATH, max_time=SECS_PER_IMG, lang=args.lang)
+    RV3 = RendererV3(LANG_PATH, max_time=SECS_PER_IMG, lang=args.lang)
     for i in range(start_idx, end_idx):
         imname = imnames[i]
+        print (f"Rendering for {imname}")
+        
         try:
             # get the image:
-            img = Image.fromarray(db['image'][imname][:])
-            # get the pre-computed depth:
-            #  there are 2 estimates of depth (represented as 2 "channels")
-            #  here we are using the second one (in some cases it might be
-            #  useful to use the other one):
-            depth = db['depth'][imname][:].T
-            depth = depth[:, :, 1]
+            img = Image.open(osp.join(IMG_PATH, imname)).convert('RGB')
+            depth = depth_db[imname][:].T
+            depth = depth[:,:,0]
+            
             # get segmentation:
-            seg = db['seg'][imname][:].astype('float32')
-            area = db['seg'][imname].attrs['area']
-            label = db['seg'][imname].attrs['label']
+            seg = seg_db['mask'][imname][:].astype('float32')
+            area = seg_db['mask'][imname].attrs['area']
+            label = seg_db['mask'][imname].attrs['label']
 
             # re-size uniformly:
             sz = depth.shape[:2][::-1]
@@ -135,10 +134,12 @@ def main(viz=False):
             print('%d of %d' % (i, end_idx - 1))
             res = RV3.render_text(img, depth, seg, area, label,
                                   ninstance=INSTANCE_PER_IMAGE, viz=viz)
+            save_res_to_imgs(imname, res)
+            
             if len(res) > 0:
                 # non-empty : successful in placing text:
                 add_res_to_db(imname, res, out_db)
-            save_res_to_imgs(imname, res)
+
             # visualize the output:
             if viz:
                 save_res_to_imgs(imname, res)
@@ -148,7 +149,6 @@ def main(viz=False):
             traceback.print_exc()
             print('>>>> CONTINUING....')
             continue
-    db.close()
     out_db.close()
 
 
